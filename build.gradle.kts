@@ -10,7 +10,7 @@ repositories {
 }
 
 group   = "one.wabbit"
-version = "1.0.0"
+version = "1.0.1"
 
 plugins {
     kotlin("jvm") version "2.0.20"
@@ -25,15 +25,15 @@ publishing {
     create<MavenPublication>("maven") {
       groupId = "one.wabbit"
       artifactId = "kotlin-parsing-charset"
-      version = "1.0.0"
+      version = "1.0.1"
       from(components["java"])
     }
   }
 }
 
 dependencies {
-    implementation("com.github.wabbit-corp:kotlin-java-escape:1.0.0")
-    testImplementation("com.github.wabbit-corp:kotlin-random-gen:1.0.0")
+    implementation("com.github.wabbit-corp:kotlin-java-escape:1.0.1")
+    testImplementation("com.github.wabbit-corp:kotlin-random-gen:1.1.0")
 
     testImplementation(kotlin("test"))
 
