@@ -1,10 +1,18 @@
 package one.wabbit.parsing.charset
 
+/**
+ * Describes the way two [CharSet] instances overlap.
+ */
 enum class Overlap {
+    /** The sets do not intersect at all. */
     EMPTY,
+    /** The two sets partially overlap but neither fully contains the other. */
     PARTIAL,
+    /** The second set is entirely contained by the first. */
     FIRST_CONTAINS_SECOND,
+    /** The first set is entirely contained by the second. */
     SECOND_CONTAINS_FIRST,
+    /** The two sets are exactly equal. */
     EQUAL
 }
 
