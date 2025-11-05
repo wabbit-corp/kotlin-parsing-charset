@@ -23,7 +23,7 @@ class CharSetSpec {
 
     private val genChar = Gen.oneOf(miniAlphabet)
     private val genString = Gen.int(0 ..< 20)
-        .flatMap { Gen.repeat(it, genChar) }
+        .flatMap { Gen.listOf(it, genChar) }
         .map { it.joinToString("") }
 
     private val genCharSet = genString.map { CharSet.of(it) }

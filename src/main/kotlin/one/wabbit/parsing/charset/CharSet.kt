@@ -11,7 +11,7 @@ import kotlin.collections.ArrayList
  * transforms a given [Char] into a string with escape sequences
  * recognized by Java (e.g. `\n`, `\t`, etc.).
  */
-private inline fun Char.formatChar() = escapeJavaChar(this)
+private fun Char.formatChar() = escapeJavaChar(this)
 
 /**
  * Represents a set of `Char` values, stored as sorted, non-overlapping, and non-adjacent ranges.

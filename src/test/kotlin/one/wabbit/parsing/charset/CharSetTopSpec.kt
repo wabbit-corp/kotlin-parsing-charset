@@ -9,7 +9,7 @@ import kotlin.test.assertEquals
 class CharSetTopSpec {
     @Test
     fun testCharSetTop() {
-        val genString = Gen.int(0 ..< 20).flatMap { Gen.repeat(it, Gen.int('a'.code .. 'z'.code).map { it.toChar() }) }
+        val genString = Gen.int(0 ..< 20).flatMap { Gen.listOf(it, Gen.int('a'.code .. 'z'.code).map { it.toChar() }) }
             .map { it.joinToString("") }
 
         var top = CharSetTop.trivial
