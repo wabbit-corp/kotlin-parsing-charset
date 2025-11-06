@@ -1,22 +1,27 @@
 package one.wabbit.parsing.charset
 
-import org.junit.Test
+import java.util.SplittableRandom
+import kotlin.test.assertEquals
 import one.wabbit.random.gen.Gen
 import one.wabbit.random.gen.foreach
-import java.util.*
-import kotlin.test.assertEquals
+import org.junit.Test
 
 class CharSetTopSpec {
     @Test
     fun testCharSetTop() {
-        val genString = Gen.int(0 ..< 20).flatMap { Gen.listOf(it, Gen.int('a'.code .. 'z'.code).map { it.toChar() }) }
-            .map { it.joinToString("") }
+        val genString =
+            Gen.int(0..<20)
+                .flatMap { Gen.listOf(it, Gen.int('a'.code..'z'.code).map { it.toChar() }) }
+                .map { it.joinToString("") }
 
         var top = CharSetTop.trivial
         top = top.refine(CharSet.of("bc"))
-        assertEquals(CharSetTop(listOf(Char.MIN_VALUE..'a', 'b'.. 'c', 'd'..Char.MAX_VALUE)), top)
+        assertEquals(CharSetTop(listOf(Char.MIN_VALUE..'a', 'b'..'c', 'd'..Char.MAX_VALUE)), top)
         top = top.refine(CharSet.of("c"))
-        assertEquals(CharSetTop(listOf(Char.MIN_VALUE..'a', 'b'..'b', 'c'..'c', 'd'..Char.MAX_VALUE)), top)
+        assertEquals(
+            CharSetTop(listOf(Char.MIN_VALUE..'a', 'b'..'b', 'c'..'c', 'd'..Char.MAX_VALUE)),
+            top,
+        )
 
         val random = SplittableRandom()
         genString.foreach(random, 100) { str1 ->

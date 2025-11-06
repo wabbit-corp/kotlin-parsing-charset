@@ -1,35 +1,34 @@
 package one.wabbit.parsing.charset
 
-import one.wabbit.formatting.escapeJavaChar
-import java.util.*
+import java.util.Arrays
+import java.util.SplittableRandom
 import kotlin.collections.ArrayList
+import kotlin.random.Random
+import one.wabbit.formatting.escapeJavaChar
 
 /**
  * Escapes a single character in a Java-compatible way.
  *
- * This function is intended to be an inline extension that
- * transforms a given [Char] into a string with escape sequences
- * recognized by Java (e.g. `\n`, `\t`, etc.).
+ * This function is intended to be an inline extension that transforms a given [Char] into a string
+ * with escape sequences recognized by Java (e.g. `\n`, `\t`, etc.).
  */
 private fun Char.formatChar() = escapeJavaChar(this)
 
 /**
  * Represents a set of `Char` values, stored as sorted, non-overlapping, and non-adjacent ranges.
  *
- * Internally, each pair of indices `[0,1], [2,3], ...` in the backing array
- * corresponds to a single continuous range of characters `[start, end]`.
+ * Internally, each pair of indices `[0,1], [2,3], ...` in the backing array corresponds to a single
+ * continuous range of characters `[start, end]`.
  *
  * The [CharSet] class provides a variety of set-theoretic operations (union, intersection,
  * difference), membership checks, iteration over contained characters, and transformations.
  *
- * Instances are immutable after construction. The companion object provides convenient
- * factory methods for creating [CharSet] instances from single characters, ranges,
- * or arbitrary collections of characters.
- *
- * @constructor
- * Private constructor used by factory methods and internal builders.
+ * Instances are immutable after construction. The companion object provides convenient factory
+ * methods for creating [CharSet] instances from single characters, ranges, or arbitrary collections
+ * of characters.
  *
  * @property set The internal `CharArray` storing `[start, end]` pairs for each disjoint range.
+ * @constructor Private constructor used by factory methods and internal builders.
  */
 class CharSet private constructor(private val set: CharArray) {
     init {
@@ -40,16 +39,14 @@ class CharSet private constructor(private val set: CharArray) {
     /**
      * A cached value combining both a hash code and the size in a single 64-bit value.
      *
-     * This is used to lazily compute the set’s [hashCode] and size
-     * for performance reasons. The special value `0x00000000FFFFFFFFUL`
-     * indicates uninitialized.
+     * This is used to lazily compute the set’s [hashCode] and size for performance reasons. The
+     * special value `0x00000000FFFFFFFFUL` indicates uninitialized.
      */
     private var hashCodeAndSize: ULong = 0x00000000FFFFFFFFUL
 
     /**
-     * Ensures the [hashCodeAndSize] cache is computed. Returns the combined value,
-     * where the top 32 bits are the `contentHashCode()` and the lower 32 bits
-     * are the size of the set.
+     * Ensures the [hashCodeAndSize] cache is computed. Returns the combined value, where the top 32
+     * bits are the `contentHashCode()` and the lower 32 bits are the size of the set.
      */
     private fun ensureHashCodeAndSizeAreComputed(): ULong {
         var localHashCodeAndSize = hashCodeAndSize
@@ -61,7 +58,8 @@ class CharSet private constructor(private val set: CharArray) {
                 val end = set[2 * i + 1]
                 size += end - start + 1
             }
-            localHashCodeAndSize = (set.contentHashCode().toULong() shl 32) or (size.toULong() and 0xFFFFFFFFUL)
+            localHashCodeAndSize =
+                (set.contentHashCode().toULong() shl 32) or (size.toULong() and 0xFFFFFFFFUL)
             hashCodeAndSize = localHashCodeAndSize
         }
         return localHashCodeAndSize
@@ -70,32 +68,32 @@ class CharSet private constructor(private val set: CharArray) {
     /**
      * The number of disjoint ranges stored in this set.
      *
-     * Each pair of `[start, end]` in the backing [CharArray] is
-     * considered a single range, so this value is `set.size / 2`.
+     * Each pair of `[start, end]` in the backing [CharArray] is considered a single range, so this
+     * value is `set.size / 2`.
      */
     val nonConsecutiveRangeCount: Int = set.size / 2
 
     /**
      * The total number of characters contained in this set.
      *
-     * If the set has multiple disjoint ranges, the size is the sum of
-     * all `end - start + 1` for each range.
+     * If the set has multiple disjoint ranges, the size is the sum of all `end - start + 1` for
+     * each range.
      */
-    val size: Int get() = (ensureHashCodeAndSizeAreComputed() and 0xFFFFFFFFUL).toInt()
+    val size: Int
+        get() = (ensureHashCodeAndSizeAreComputed() and 0xFFFFFFFFUL).toInt()
 
     /**
      * Returns a hash code for this set, derived from the backing array.
      *
-     * The hash code is stable for the lifetime of the instance, and is
-     * cached internally.
+     * The hash code is stable for the lifetime of the instance, and is cached internally.
      */
     override fun hashCode(): Int = (ensureHashCodeAndSizeAreComputed() shr 32).toInt()
 
     /**
      * Determines equality by comparing the backing arrays of both [CharSet] instances.
      *
-     * Two [CharSet]s are considered equal if they represent the exact same ranges
-     * in the same order.
+     * Two [CharSet]s are considered equal if they represent the exact same ranges in the same
+     * order.
      *
      * @return `true` if both sets have identical ranges; `false` otherwise.
      */
@@ -104,29 +102,24 @@ class CharSet private constructor(private val set: CharArray) {
         return this.set.contentEquals(other.set)
     }
 
-    /**
-     * @return `true` if this set contains no characters.
-     */
+    /** @return `true` if this set contains no characters. */
     fun isEmpty(): Boolean = set.isEmpty()
 
-    /**
-     * @return `true` if this set contains at least one character.
-     */
+    /** @return `true` if this set contains at least one character. */
     fun isNotEmpty(): Boolean = set.isNotEmpty()
 
     /**
-     * @return `true` if this set represents all possible `Char` values
-     * (`[Char.MIN_VALUE .. Char.MAX_VALUE]`).
+     * @return `true` if this set represents all possible `Char` values (`[Char.MIN_VALUE ..
+     *   Char.MAX_VALUE]`).
      */
-    fun isAll(): Boolean =
-        set.size == 2 && set[0] == Char.MIN_VALUE && set[1] == Char.MAX_VALUE
+    fun isAll(): Boolean = set.size == 2 && set[0] == Char.MIN_VALUE && set[1] == Char.MAX_VALUE
 
     /**
-     * Returns the character at a given [index] if you laid out all characters in this
-     * set contiguously.
+     * Returns the character at a given [index] if you laid out all characters in this set
+     * contiguously.
      *
-     * For example, if the set is `[a-dx-z]`, then `get(0) == 'a'`, `get(1) == 'b'`,
-     * up through `get(3) == 'd'`, etc.
+     * For example, if the set is `[a-dx-z]`, then `get(0) == 'a'`, `get(1) == 'b'`, up through
+     * `get(3) == 'd'`, etc.
      *
      * @throws IndexOutOfBoundsException if the [index] exceeds the size of this set.
      */
@@ -164,8 +157,7 @@ class CharSet private constructor(private val set: CharArray) {
     /**
      * Checks whether this set contains a given character [c].
      *
-     * Uses a linear search for small sets (≤ 16 intervals),
-     * and a binary search for larger sets.
+     * Uses a linear search for small sets (≤ 16 intervals), and a binary search for larger sets.
      *
      * @param c The character to check for membership.
      * @return `true` if [c] is in this set; `false` otherwise.
@@ -224,8 +216,8 @@ class CharSet private constructor(private val set: CharArray) {
         if (this.set.isEmpty() && that.set.isNotEmpty()) return false
 
         while (i < thisRangeCount && j < thatRangeCount) {
-//            val a = this.set[i]
-//            val b = that.set[j]
+            //            val a = this.set[i]
+            //            val b = that.set[j]
             val aFirst = this.set[2 * i]
             val aLast = this.set[2 * i + 1]
             val bFirst = that.set[2 * j]
@@ -244,9 +236,9 @@ class CharSet private constructor(private val set: CharArray) {
     }
 
     /**
-     * Returns an [Overlap] enum indicating how this set and [that] set overlap.
-     * Possible outcomes: [Overlap.EMPTY], [Overlap.FIRST_CONTAINS_SECOND],
-     * [Overlap.SECOND_CONTAINS_FIRST], [Overlap.EQUAL], or [Overlap.PARTIAL].
+     * Returns an [Overlap] enum indicating how this set and [that] set overlap. Possible outcomes:
+     * [Overlap.EMPTY], [Overlap.FIRST_CONTAINS_SECOND], [Overlap.SECOND_CONTAINS_FIRST],
+     * [Overlap.EQUAL], or [Overlap.PARTIAL].
      *
      * @param that Another [CharSet].
      * @return An [Overlap] value describing the relationship.
@@ -262,12 +254,12 @@ class CharSet private constructor(private val set: CharArray) {
         val thisRangeCount = this.set.size / 2
         val thatRangeCount = that.set.size / 2
 
-        var total = 0        // intersected intervals
-        var totalA = 0       // intersected intervals where A /\ B == A
-        var totalB = 0       // intersected intervals where A /\ B == B
-        var totalEqual = 0   // intersected intervals where A /\ B == A \/ B
-        var extraA = 0       // extra intervals in A
-        var extraB = 0       // extra intervals in B
+        var total = 0 // intersected intervals
+        var totalA = 0 // intersected intervals where A /\ B == A
+        var totalB = 0 // intersected intervals where A /\ B == B
+        var totalEqual = 0 // intersected intervals where A /\ B == A \/ B
+        var extraA = 0 // extra intervals in A
+        var extraB = 0 // extra intervals in B
 
         var aIndex = 0
         var bIndex = 0
@@ -294,9 +286,10 @@ class CharSet private constructor(private val set: CharArray) {
             } else {
                 val first = maxOf(aFirst, bFirst)
                 val last = minOf(aLast, bLast)
-//                println("[${aFirst.formatChar()}-${aLast.formatChar()}] (A) /\\ " +
-//                        "[${bFirst.formatChar()}-${bLast.formatChar()}] (B) = " +
-//                        "[${first.formatChar()}-${last.formatChar()}]")
+                //                println("[${aFirst.formatChar()}-${aLast.formatChar()}] (A) /\\ "
+                // +
+                //                        "[${bFirst.formatChar()}-${bLast.formatChar()}] (B) = " +
+                //                        "[${first.formatChar()}-${last.formatChar()}]")
 
                 total += 1
                 if (first == aFirst && first == bFirst && last == aLast && last == bLast) {
@@ -340,13 +333,13 @@ class CharSet private constructor(private val set: CharArray) {
             bIndex++
         }
 
-//        println("total = $total")
-//        println("totalA = $totalA")
-//        println("totalB = $totalB")
-//        println("totalEqual = $totalEqual")
-//        println("totalPartial = $totalPartial")
-//        println("extraA = $extraA")
-//        println("extraB = $extraB")
+        //        println("total = $total")
+        //        println("totalA = $totalA")
+        //        println("totalB = $totalB")
+        //        println("totalEqual = $totalEqual")
+        //        println("totalPartial = $totalPartial")
+        //        println("extraA = $extraA")
+        //        println("extraB = $extraB")
 
         if (total == 0) return Overlap.EMPTY
         if (total == totalEqual) {
@@ -367,9 +360,8 @@ class CharSet private constructor(private val set: CharArray) {
     }
 
     /**
-     * Returns a new [CharSet] by transforming each character in this set with the
-     * given [transform] function. The result is then built as a minimal set of
-     * disjoint ranges.
+     * Returns a new [CharSet] by transforming each character in this set with the given [transform]
+     * function. The result is then built as a minimal set of disjoint ranges.
      *
      * @param transform A mapping from a `Char` to another `Char`.
      * @return A new [CharSet] containing the transformed characters.
@@ -389,8 +381,8 @@ class CharSet private constructor(private val set: CharArray) {
     }
 
     /**
-     * Returns a new [CharSet] containing only the characters from this set that satisfy
-     * the given [predicate].
+     * Returns a new [CharSet] containing only the characters from this set that satisfy the given
+     * [predicate].
      *
      * @param predicate A test function that returns `true` if a character should be included.
      * @return A new [CharSet] containing only those characters for which [predicate] is `true`.
@@ -433,15 +425,16 @@ class CharSet private constructor(private val set: CharArray) {
         for (rangeIndex in 0 until rangeCount) {
             val first = set[2 * rangeIndex]
             val last = set[2 * rangeIndex + 1]
-            for (i in first..last)
+            for (i in first..last) {
                 if (predicate(i)) result++
+            }
         }
         return result
     }
 
     /**
-     * Creates and returns a new [CharSet] whose contents are the inverse of this set
-     * with respect to the entire `[Char.MIN_VALUE .. Char.MAX_VALUE]` range.
+     * Creates and returns a new [CharSet] whose contents are the inverse of this set with respect
+     * to the entire `[Char.MIN_VALUE .. Char.MAX_VALUE]` range.
      *
      * If this set is empty, the inversion is the universal set of all `Char` values.
      *
@@ -712,8 +705,8 @@ class CharSet private constructor(private val set: CharArray) {
     }
 
     /**
-     * Converts this [CharSet] to a [List] of [CharRange] objects, each representing
-     * a disjoint interval.
+     * Converts this [CharSet] to a [List] of [CharRange] objects, each representing a disjoint
+     * interval.
      *
      * @return A list of ranges `[start..end, start2..end2, ...]`.
      */
@@ -754,9 +747,9 @@ class CharSet private constructor(private val set: CharArray) {
         return object : Iterator<Char> {
             var i = 0
             var j = 0
-            override fun hasNext(): Boolean {
-                return i < set.size
-            }
+
+            override fun hasNext(): Boolean = i < set.size
+
             override fun next(): Char {
                 val first = set[i]
                 val last = set[i + 1]
@@ -787,9 +780,9 @@ class CharSet private constructor(private val set: CharArray) {
     }
 
     /**
-     * Returns a string representation of this set in bracketed format, e.g. `[a-d0-9]`.
-     * For each pair of `[start, end]`, the representation includes either
-     * a single character if `start == end`, or a range `start-end` otherwise.
+     * Returns a string representation of this set in bracketed format, e.g. `[a-d0-9]`. For each
+     * pair of `[start, end]`, the representation includes either a single character if `start ==
+     * end`, or a range `start-end` otherwise.
      *
      * @return A human-readable string representation of this [CharSet].
      */
@@ -812,22 +805,17 @@ class CharSet private constructor(private val set: CharArray) {
     }
 
     companion object {
-        /**
-         * A private builder class used to accumulate `[start, end]` pairs.
-         */
+        /** A private builder class used to accumulate `[start, end]` pairs. */
         private class Builder {
             private val set = mutableListOf<Char>()
 
             /**
-             * Adds a non-adjacent range [c] to this builder’s internal list,
-             * asserting that it does not overlap or even touch the previously
-             * added range.
+             * Adds a non-adjacent range [c] to this builder’s internal list, asserting that it does
+             * not overlap or even touch the previously added range.
              */
             fun addNonAdjacent(c: CharRange) = addNonAdjacent(c.first, c.last)
 
-            /**
-             * Internal helper for adding a strictly non-adjacent range.
-             */
+            /** Internal helper for adding a strictly non-adjacent range. */
             fun addNonAdjacent(cFirst: Char, cLast: Char) {
                 if (set.isEmpty()) {
                     set.add(cFirst)
@@ -844,14 +832,13 @@ class CharSet private constructor(private val set: CharArray) {
             }
 
             /**
-             * Adds a range [c] that may be adjacent to the previous range,
-             * merging them if needed.
+             * Adds a range [c] that may be adjacent to the previous range, merging them if needed.
              */
             fun addPossiblyAdjacent(c: CharRange) = addPossiblyAdjacent(c.first, c.last)
 
             /**
-             * Internal helper for adding a possibly adjacent range,
-             * merging it with the last range if they touch.
+             * Internal helper for adding a possibly adjacent range, merging it with the last range
+             * if they touch.
              */
             fun addPossiblyAdjacent(cFirst: Char, cLast: Char) {
                 if (set.isEmpty()) {
@@ -875,14 +862,12 @@ class CharSet private constructor(private val set: CharArray) {
             }
 
             /**
-             * Adds a range [c] that may overlap or adjoin the previous
-             * range, merging them into a single interval if necessary.
+             * Adds a range [c] that may overlap or adjoin the previous range, merging them into a
+             * single interval if necessary.
              */
             fun addPossiblyOverlapping(c: CharRange) = addPossiblyOverlapping(c.first, c.last)
 
-            /**
-             * Internal helper for adding a possibly overlapping range.
-             */
+            /** Internal helper for adding a possibly overlapping range. */
             fun addPossiblyOverlapping(cFirst: Char, cLast: Char) {
                 assert(cFirst <= cLast)
 
@@ -915,15 +900,13 @@ class CharSet private constructor(private val set: CharArray) {
             fun build(): CharSet = CharSet(set.toCharArray())
         }
 
-        /**
-         * Indicates whether JVM-level assertions are enabled for this class.
-         */
-        @JvmStatic
-        private val assertionStatus = CharSet::class.java.desiredAssertionStatus()
+        /** Indicates whether JVM-level assertions are enabled for this class. */
+        @JvmStatic private val assertionStatus = CharSet::class.java.desiredAssertionStatus()
 
         /**
          * Asserts that the provided [list] of `[start, end, ...]` pairs forms a valid range list.
-         * Checks that `start <= end` and that each `[end]` is strictly less than the next `[start]`.
+         * Checks that `start <= end` and that each `[end]` is strictly less than the next
+         * `[start]`.
          */
         @JvmStatic
         fun assertValidRangeList(list: CharArray) {
@@ -941,9 +924,7 @@ class CharSet private constructor(private val set: CharArray) {
             }
         }
 
-        /**
-         * Overload of [assertValidRangeList] that operates on a [MutableList] of `Char`.
-         */
+        /** Overload of [assertValidRangeList] that operates on a [MutableList] of `Char`. */
         @JvmStatic
         fun assertValidRangeList(list: MutableList<Char>) {
             if (!assertionStatus) return
@@ -960,14 +941,10 @@ class CharSet private constructor(private val set: CharArray) {
             }
         }
 
-        /**
-         * An empty [CharSet], containing zero characters.
-         */
+        /** An empty [CharSet], containing zero characters. */
         val none: CharSet = CharSet(CharArray(0))
 
-        /**
-         * A [CharSet] containing all characters from [Char.MIN_VALUE] to [Char.MAX_VALUE].
-         */
+        /** A [CharSet] containing all characters from [Char.MIN_VALUE] to [Char.MAX_VALUE]. */
         val all: CharSet = CharSet(charArrayOf(Char.MIN_VALUE, Char.MAX_VALUE))
 
         /**
@@ -1003,9 +980,7 @@ class CharSet private constructor(private val set: CharArray) {
             }
         }
 
-        /**
-         * Returns a [CharSet] containing the inclusive [CharRange] [range].
-         */
+        /** Returns a [CharSet] containing the inclusive [CharRange] [range]. */
         fun of(range: CharRange): CharSet {
             require(range.first <= range.last)
             if (range.isEmpty()) return none
@@ -1033,29 +1008,27 @@ class CharSet private constructor(private val set: CharArray) {
          *
          * Merges consecutive characters in alphabetical order.
          */
-        fun of(s: String): CharSet = when (s.length) {
-            0 -> none
-            1 -> one(s[0])
-            else -> unsafeFromChars(s.toCharArray())
-        }
+        fun of(s: String): CharSet =
+            when (s.length) {
+                0 -> none
+                1 -> one(s[0])
+                else -> unsafeFromChars(s.toCharArray())
+            }
 
-        /**
-         * Returns a [CharSet] containing characters in the given collection [s].
-         */
-        fun of(s: Collection<Char>): CharSet = when (s.size) {
-            0 -> none
-            1 -> one(s.iterator().next())
-            else -> unsafeFromChars(s.toCharArray())
-        }
+        /** Returns a [CharSet] containing characters in the given collection [s]. */
+        fun of(s: Collection<Char>): CharSet =
+            when (s.size) {
+                0 -> none
+                1 -> one(s.iterator().next())
+                else -> unsafeFromChars(s.toCharArray())
+            }
 
         /**
          * Returns a [CharSet] by concatenating multiple strings [s] and merging their characters.
          */
         fun of(vararg s: String): CharSet = of(s.joinToString(""))
 
-        /**
-         * Returns the union of multiple [CharSet] instances [s].
-         */
+        /** Returns the union of multiple [CharSet] instances [s]. */
         fun union(vararg s: CharSet): CharSet {
             var result = none
             for (set in s) {
@@ -1064,9 +1037,7 @@ class CharSet private constructor(private val set: CharArray) {
             return result
         }
 
-        /**
-         * Returns the union of all the [CharSet] elements in a collection [s].
-         */
+        /** Returns the union of all the [CharSet] elements in a collection [s]. */
         fun union(s: Collection<CharSet>): CharSet {
             var result = none
             for (set in s) {
@@ -1076,8 +1047,8 @@ class CharSet private constructor(private val set: CharArray) {
         }
 
         /**
-         * Internal helper to build a [CharSet] from an unsorted array of characters,
-         * merging consecutive duplicates and adjacent runs.
+         * Internal helper to build a [CharSet] from an unsorted array of characters, merging
+         * consecutive duplicates and adjacent runs.
          */
         private fun unsafeFromChars(chars: CharArray): CharSet {
             when (chars.size) {
@@ -1112,73 +1083,60 @@ class CharSet private constructor(private val set: CharArray) {
             }
         }
 
-        /**
-         * A [CharSet] of ASCII characters from 0 to 127.
-         */
+        /** A [CharSet] of ASCII characters from 0 to 127. */
         val ascii = of(0.toChar()..127.toChar())
 
-        /**
-         * A [CharSet] of ASCII digit characters (`0-9`).
-         */
+        /** A [CharSet] of ASCII digit characters (`0-9`). */
         val digit: CharSet = ascii.filter { it.isDigit() }
 
-        /**
-         * A [CharSet] of ASCII letters (`A-Za-z`).
-         */
+        /** A [CharSet] of ASCII letters (`A-Za-z`). */
         val letter: CharSet = ascii.filter { it.isLetter() }
 
-        /**
-         * A [CharSet] of ASCII alphanumeric characters.
-         */
+        /** A [CharSet] of ASCII alphanumeric characters. */
         val letterOrDigit: CharSet = ascii.filter { it.isLetterOrDigit() }
 
-        /**
-         * A [CharSet] of hexadecimal digits (`0-9A-Fa-f`).
-         */
+        /** A [CharSet] of hexadecimal digits (`0-9A-Fa-f`). */
         val hexDigit = of("01234567890abcdefABCDEF")
 
-        /**
-         * A [CharSet] of ASCII whitespace characters.
-         */
+        /** A [CharSet] of ASCII whitespace characters. */
         val whitespace = ascii.filter { it.isWhitespace() }
 
-        /**
-         * A [CharSet] containing all defined Unicode characters.
-         */
+        /** A [CharSet] containing all defined Unicode characters. */
         val validUnicode: CharSet = of((Char.MIN_VALUE..Char.MAX_VALUE).filter { it.isDefined() })
 
-        /**
-         * A [CharSet] containing all Unicode digit characters.
-         */
+        /** A [CharSet] containing all Unicode digit characters. */
         val unicodeDigit: CharSet = of((Char.MIN_VALUE..Char.MAX_VALUE).filter { it.isDigit() })
 
-        /**
-         * A [CharSet] containing all Unicode letters.
-         */
+        /** A [CharSet] containing all Unicode letters. */
         val unicodeLetter: CharSet = of((Char.MIN_VALUE..Char.MAX_VALUE).filter { it.isLetter() })
 
-        /**
-         * A [CharSet] containing all Unicode letters or digits.
-         */
-        val unicodeLetterOrDigit: CharSet = of((Char.MIN_VALUE..Char.MAX_VALUE).filter { it.isLetterOrDigit() })
+        /** A [CharSet] containing all Unicode letters or digits. */
+        val unicodeLetterOrDigit: CharSet =
+            of((Char.MIN_VALUE..Char.MAX_VALUE).filter { it.isLetterOrDigit() })
 
         /**
-         * A [CharSet] containing various forms of Unicode whitespace,
-         * as well as common ASCII whitespace chars.
+         * A [CharSet] containing various forms of Unicode whitespace, as well as common ASCII
+         * whitespace chars.
          */
-        val unicodeWhitespace = of((Char.MIN_VALUE..Char.MAX_VALUE).filter { it.isWhitespace() || it == '\n' || it == '\r' || it == ' ' })
+        val unicodeWhitespace =
+            of(
+                (Char.MIN_VALUE..Char.MAX_VALUE).filter {
+                    it.isWhitespace() || it == '\n' || it == '\r' || it == ' '
+                }
+            )
     }
 }
 
 /**
- * Represents a top-level partitioning of the entire `Char.MIN_VALUE..Char.MAX_VALUE` range
- * into adjacent [CharRange] segments.
+ * Represents a top-level partitioning of the entire `Char.MIN_VALUE..Char.MAX_VALUE` range into
+ * adjacent [CharRange] segments.
  *
- * For example, a [CharSetTop] might partition the space into `[0..9] [10..31] [32..127] [128..65535]`.
- * The [basis] list covers the entire range from [Char.MIN_VALUE] to [Char.MAX_VALUE] in consecutive
- * chunks with no gaps or overlaps.
+ * For example, a [CharSetTop] might partition the space into `[0..9] [10..31] [32..127]
+ * [128..65535]`. The [basis] list covers the entire range from [Char.MIN_VALUE] to [Char.MAX_VALUE]
+ * in consecutive chunks with no gaps or overlaps.
  *
- * @property basis A list of consecutive [CharRange] partitions fully covering `Char.MIN_VALUE..Char.MAX_VALUE`.
+ * @property basis A list of consecutive [CharRange] partitions fully covering
+ *   `Char.MIN_VALUE..Char.MAX_VALUE`.
  */
 data class CharSetTop(val basis: List<CharRange>) {
     init {
@@ -1192,15 +1150,12 @@ data class CharSetTop(val basis: List<CharRange>) {
         }
     }
 
-    /**
-     * The total number of basis partitions.
-     */
+    /** The total number of basis partitions. */
     val size = basis.size
 
     /**
-     * Produces a refined partition of this [CharSetTop] combined with [other],
-     * effectively computing the partition that differentiates all cut points
-     * in both [basis] lists.
+     * Produces a refined partition of this [CharSetTop] combined with [other], effectively
+     * computing the partition that differentiates all cut points in both [basis] lists.
      *
      * @param other Another [CharSetTop].
      * @return A new [CharSetTop] whose basis includes all cut boundaries of both.
@@ -1247,9 +1202,8 @@ data class CharSetTop(val basis: List<CharRange>) {
     }
 
     /**
-     * Produces a refined partition by combining this [CharSetTop] with a [CharSet].
-     * Internally uses [fromSet] to transform the [CharSet] into a [CharSetTop] and
-     * then calls [refine].
+     * Produces a refined partition by combining this [CharSetTop] with a [CharSet]. Internally uses
+     * [fromSet] to transform the [CharSet] into a [CharSetTop] and then calls [refine].
      *
      * @param set A [CharSet] whose cut points will also become partitions.
      * @return A new [CharSetTop].
@@ -1257,31 +1211,29 @@ data class CharSetTop(val basis: List<CharRange>) {
     fun refine(set: CharSet) = refine(fromSet(set))
 
     /**
-     * Returns a string representation of all partitions in this top-level set,
-     * in a bracket-like notation. For example: `[\\u0000-\\u0009\\u000A-\\u001F\\u0020-\\u007F...]`.
+     * Returns a string representation of all partitions in this top-level set, in a bracket-like
+     * notation. For example: `[\\u0000-\\u0009\\u000A-\\u001F\\u0020-\\u007F...]`.
      */
-    override fun toString(): String {
-        return basis.joinToString("", "[", "]") {
-            if (it.first == it.last) it.first.formatChar()
-            else "${it.first.formatChar()}-${it.last.formatChar()}"
+    override fun toString(): String =
+        basis.joinToString("", "[", "]") {
+            if (it.first == it.last) {
+                it.first.formatChar()
+            } else {
+                "${it.first.formatChar()}-${it.last.formatChar()}"
+            }
         }
-    }
 
     companion object {
-        /**
-         * A trivial [CharSetTop] with a single range covering `Char.MIN_VALUE..Char.MAX_VALUE`.
-         */
+        /** A trivial [CharSetTop] with a single range covering `Char.MIN_VALUE..Char.MAX_VALUE`. */
         val trivial = CharSetTop(listOf(Char.MIN_VALUE..Char.MAX_VALUE))
 
-        /**
-         * A private builder to handle the logic of cutting intervals.
-         */
+        /** A private builder to handle the logic of cutting intervals. */
         private class Builder {
             val list: MutableList<CharRange> = mutableListOf()
 
             /**
-             * Cuts the current set of intervals at [code], effectively inserting
-             * a boundary between `[last.last+1 .. code-1]`.
+             * Cuts the current set of intervals at [code], effectively inserting a boundary between
+             * `[last.last+1 .. code-1]`.
              */
             fun cut(code: Int) {
                 require(code > Char.MIN_VALUE.code)
@@ -1301,7 +1253,7 @@ data class CharSetTop(val basis: List<CharRange>) {
              * Finishes building the partition, ensuring it covers up to [Char.MAX_VALUE].
              *
              * @return A new [CharSetTop] covering `Char.MIN_VALUE..Char.MAX_VALUE` with the
-             * specified intermediate cut points.
+             *   specified intermediate cut points.
              */
             fun finish(): CharSetTop {
                 if (list.isEmpty()) {
@@ -1318,8 +1270,8 @@ data class CharSetTop(val basis: List<CharRange>) {
         }
 
         /**
-         * Produces a [CharSetTop] from a given [CharSet], turning its non-consecutive ranges
-         * into cut points in the `Char.MIN_VALUE..Char.MAX_VALUE` space.
+         * Produces a [CharSetTop] from a given [CharSet], turning its non-consecutive ranges into
+         * cut points in the `Char.MIN_VALUE..Char.MAX_VALUE` space.
          *
          * @param set A [CharSet] whose boundaries become cuts in the resulting [CharSetTop].
          * @return A new [CharSetTop].
