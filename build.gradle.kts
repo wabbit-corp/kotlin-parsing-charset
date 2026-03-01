@@ -32,8 +32,8 @@ publishing {
 }
 
 dependencies {
-    implementation("com.github.wabbit-corp:kotlin-java-escape:1.0.1")
-    testImplementation("com.github.wabbit-corp:kotlin-random-gen:2.0.0")
+    implementation("one.wabbit:kotlin-java-escape:1.0.1")
+    testImplementation("one.wabbit:kotlin-random-gen:2.0.0")
 
     testImplementation(kotlin("test"))
 
