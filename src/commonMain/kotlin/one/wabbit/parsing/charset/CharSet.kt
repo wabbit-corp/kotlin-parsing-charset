@@ -1,7 +1,5 @@
 package one.wabbit.parsing.charset
 
-import java.util.Arrays
-import java.util.SplittableRandom
 import kotlin.collections.ArrayList
 import kotlin.random.Random
 import one.wabbit.formatting.escapeJavaChar
@@ -137,15 +135,6 @@ class CharSet private constructor(private val set: CharArray) {
     }
 
     /**
-     * Returns a pseudo-randomly selected character from this set using a [SplittableRandom].
-     *
-     * @param random The random number generator to use.
-     * @return A randomly sampled character within this set’s range.
-     * @throws NoSuchElementException if the set is empty.
-     */
-    fun sample(random: SplittableRandom): Char = this[random.nextInt(size)]
-
-    /**
      * Returns a pseudo-randomly selected character from this set using a standard [Random].
      *
      * @param random The random number generator to use.
@@ -173,13 +162,18 @@ class CharSet private constructor(private val set: CharArray) {
             }
             return false
         } else {
-            val i = set.binarySearch(c)
-
-            // If i >= 0, then some range has c as its first or last element.
-            if (i >= 0) return true
-
-            // Otherwise, j is the insertion point.
-            val j = -i - 1
+            var low = 0
+            var high = set.size - 1
+            while (low <= high) {
+                val mid = (low + high) ushr 1
+                val mv = set[mid]
+                when {
+                    mv < c -> low = mid + 1
+                    mv > c -> high = mid - 1
+                    else -> return true
+                }
+            }
+            val j = low
             // If j is even, c is before the first element of some range.
             // If j is odd, so c is after the first element of some range and
             // before the last element of that range.
@@ -824,7 +818,7 @@ class CharSet private constructor(private val set: CharArray) {
                 }
 
                 val lastLast = set[set.size - 1]
-                assert(lastLast.code + 1 < cFirst.code)
+                check(lastLast.code + 1 < cFirst.code)
                 set.add(cFirst)
                 set.add(cLast)
 
@@ -849,7 +843,7 @@ class CharSet private constructor(private val set: CharArray) {
 
                 val lastFirst = set[set.size - 2]
                 val lastLast = set[set.size - 1]
-                assert(lastLast < cFirst)
+                check(lastLast < cFirst)
 
                 if (lastLast.code + 1 == cFirst.code) {
                     set[set.size - 1] = cLast
@@ -869,7 +863,7 @@ class CharSet private constructor(private val set: CharArray) {
 
             /** Internal helper for adding a possibly overlapping range. */
             fun addPossiblyOverlapping(cFirst: Char, cLast: Char) {
-                assert(cFirst <= cLast)
+                check(cFirst <= cLast)
 
                 if (set.isEmpty()) {
                     set.add(cFirst)
@@ -880,7 +874,7 @@ class CharSet private constructor(private val set: CharArray) {
                 val lastFirst = set[set.size - 2]
                 val lastLast = set[set.size - 1]
 
-                assert(lastFirst <= cFirst)
+                check(lastFirst <= cFirst)
 
                 if (lastLast.code + 1 >= cFirst.code) {
                     set[set.size - 1] = maxOf(lastLast, cLast)
@@ -900,43 +894,40 @@ class CharSet private constructor(private val set: CharArray) {
             fun build(): CharSet = CharSet(set.toCharArray())
         }
 
-        /** Indicates whether JVM-level assertions are enabled for this class. */
-        @JvmStatic private val assertionStatus = CharSet::class.java.desiredAssertionStatus()
+        private const val assertionStatus: Boolean = true
 
         /**
          * Asserts that the provided [list] of `[start, end, ...]` pairs forms a valid range list.
          * Checks that `start <= end` and that each `[end]` is strictly less than the next
          * `[start]`.
          */
-        @JvmStatic
         fun assertValidRangeList(list: CharArray) {
             if (!assertionStatus) return
-            assert(list.size % 2 == 0)
+            check(list.size % 2 == 0)
             val rangeCount = list.size / 2
             for (i in 0 until rangeCount) {
                 val start = list[2 * i]
                 val end = list[2 * i + 1]
-                assert(start <= end)
+                check(start <= end)
                 if (i > 0) {
                     val prevEnd = list[2 * (i - 1) + 1]
-                    assert(prevEnd < start)
+                    check(prevEnd < start)
                 }
             }
         }
 
         /** Overload of [assertValidRangeList] that operates on a [MutableList] of `Char`. */
-        @JvmStatic
         fun assertValidRangeList(list: MutableList<Char>) {
             if (!assertionStatus) return
-            assert(list.size % 2 == 0)
+            check(list.size % 2 == 0)
             val rangeCount = list.size / 2
             for (i in 0 until rangeCount) {
                 val start = list[2 * i]
                 val end = list[2 * i + 1]
-                assert(start <= end)
+                check(start <= end)
                 if (i > 0) {
                     val prevEnd = list[2 * (i - 1) + 1]
-                    assert(prevEnd < start)
+                    check(prevEnd < start)
                 }
             }
         }
@@ -1055,7 +1046,7 @@ class CharSet private constructor(private val set: CharArray) {
                 0 -> return none
                 1 -> return one(chars[0])
                 else -> {
-                    Arrays.sort(chars)
+                    chars.sort()
 
                     val ranges = mutableListOf<Char>()
                     var start = chars[0]

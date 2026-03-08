@@ -13,14 +13,12 @@ package one.wabbit.parsing.charset
  */
 data class CharSetTop(val basis: List<CharRange>) {
     init {
-        if (this.javaClass.desiredAssertionStatus()) {
-            assert(basis.all { it.first <= it.last })
-            assert(basis.zipWithNext().all { it.first.last == it.second.first - 1 })
-            assert(basis.size > 0)
-            assert(basis.first().first == Char.MIN_VALUE)
-            assert(basis.last().last == Char.MAX_VALUE)
-            // Basis fully partitions the space between Char.MIN_VALUE and Char.MAX_VALUE.
-        }
+        check(basis.all { it.first <= it.last })
+        check(basis.zipWithNext().all { it.first.last == it.second.first - 1 })
+        check(basis.isNotEmpty())
+        check(basis.first().first == Char.MIN_VALUE)
+        check(basis.last().last == Char.MAX_VALUE)
+        // Basis fully partitions the space between Char.MIN_VALUE and Char.MAX_VALUE.
     }
 
     /** The total number of basis partitions. */
