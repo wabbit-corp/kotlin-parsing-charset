@@ -95,9 +95,10 @@ dokka {
     dokkaSourceSets.configureEach {
         sourceLink {
             localDirectory.set(file("src"))
-            remoteUrl("https://example.com/src")
+            remoteUrl("https://github.com/wabbit-corp/kotlin-parsing-charset/tree/master/src")
             remoteLineSuffix.set("#L")
         }
+
     }
 
     pluginsConfiguration.html {
