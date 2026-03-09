@@ -6,6 +6,8 @@ repositories {
     google()
 
     mavenCentral()
+
+    maven("https://jitpack.io")
 }
 
 group = "one.wabbit"
@@ -62,7 +64,7 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
-                implementation(project(":kotlin-java-escape")) // 1.0.1
+                implementation("one.wabbit:kotlin-java-escape:1.0.1")
 
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.9.0")
 
