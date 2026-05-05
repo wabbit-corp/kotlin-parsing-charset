@@ -2,6 +2,7 @@ package one.wabbit.parsing.charset
 
 import java.util.SplittableRandom
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import one.wabbit.random.gen.Gen
@@ -86,6 +87,16 @@ class CharSetSpec {
     fun `Constructor order independence`() {
         genCharList.foreach(100) { charList ->
             assertEquals(CharSet.of(charList.sorted()), CharSet.of(charList.shuffled()))
+        }
+    }
+
+    @Test
+    fun `range-list validation rejects adjacent ranges`() {
+        assertFailsWith<IllegalStateException> {
+            CharSet.assertValidRangeList(charArrayOf('a', 'b', 'c', 'd'))
+        }
+        assertFailsWith<IllegalStateException> {
+            CharSet.assertValidRangeList(mutableListOf('a', 'b', 'c', 'd'))
         }
     }
 

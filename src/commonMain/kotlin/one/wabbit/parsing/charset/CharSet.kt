@@ -139,7 +139,7 @@ class CharSet private constructor(private val set: CharArray) {
      *
      * @param random The random number generator to use.
      * @return A randomly sampled character within this set’s range.
-     * @throws NoSuchElementException if the set is empty.
+     * @throws IllegalArgumentException if the set is empty.
      */
     fun sample(random: Random): Char = this[random.nextInt(size)]
 
@@ -911,12 +911,14 @@ class CharSet private constructor(private val set: CharArray) {
                 check(start <= end)
                 if (i > 0) {
                     val prevEnd = list[2 * (i - 1) + 1]
-                    check(prevEnd < start)
+                    check(prevEnd.code + 1 < start.code)
                 }
             }
         }
 
-        /** Overload of [assertValidRangeList] that operates on a [MutableList] of `Char`. */
+        /**
+         * Overload of [assertValidRangeList] that operates on a [MutableList] of `Char`.
+         */
         fun assertValidRangeList(list: MutableList<Char>) {
             if (!assertionStatus) return
             check(list.size % 2 == 0)
@@ -927,7 +929,7 @@ class CharSet private constructor(private val set: CharArray) {
                 check(start <= end)
                 if (i > 0) {
                     val prevEnd = list[2 * (i - 1) + 1]
-                    check(prevEnd < start)
+                    check(prevEnd.code + 1 < start.code)
                 }
             }
         }
@@ -1087,7 +1089,7 @@ class CharSet private constructor(private val set: CharArray) {
         val letterOrDigit: CharSet = ascii.filter { it.isLetterOrDigit() }
 
         /** A [CharSet] of hexadecimal digits (`0-9A-Fa-f`). */
-        val hexDigit = of("01234567890abcdefABCDEF")
+        val hexDigit = of("0123456789abcdefABCDEF")
 
         /** A [CharSet] of ASCII whitespace characters. */
         val whitespace = ascii.filter { it.isWhitespace() }
