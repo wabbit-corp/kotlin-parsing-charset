@@ -1,0 +1,6 @@
+# Repo-local check suppressions for generated assets, source-set layout, and charset literals.
+check:ignore E_DUPLICATE_FILE .banner.png
+check:ignore E_KMP_CUSTOM_SOURCE_ROOT_UNDECLARED src/test/kotlin
+check:ignore E_KMP_AMBIGUOUS_NATIVE_NAME .
+check:ignore E_KMP_REDUNDANT_TARGET_ALIAS .
+check:ignore E_HIGH_ENTROPY_STRING src/commonMain/kotlin/one/wabbit/parsing/charset/CharSet.kt
