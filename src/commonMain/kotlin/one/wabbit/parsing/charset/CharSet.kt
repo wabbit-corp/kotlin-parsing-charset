@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 package one.wabbit.parsing.charset
 
 import kotlin.collections.ArrayList
@@ -916,9 +918,7 @@ class CharSet private constructor(private val set: CharArray) {
             }
         }
 
-        /**
-         * Overload of [assertValidRangeList] that operates on a [MutableList] of `Char`.
-         */
+        /** Overload of [assertValidRangeList] that operates on a [MutableList] of `Char`. */
         fun assertValidRangeList(list: MutableList<Char>) {
             if (!assertionStatus) return
             check(list.size % 2 == 0)

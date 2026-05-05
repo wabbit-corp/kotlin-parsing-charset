@@ -1,12 +1,19 @@
 # kotlin-parsing-charset
 
+![](./.meta/github-project-banner.png)
+
+<p align=center>
+    <img src="https://img.shields.io/maven-central/v/one.wabbit/kotlin-parsing-charset" alt="Maven Central">
+    <img src="https://img.shields.io/badge/Kotlin-Multiplatform-7F52FF" alt="Kotlin Multiplatform">
+</p>
+
 `kotlin-parsing-charset` is a Kotlin Multiplatform library for representing sets of `Char` values as
 compact sorted ranges.
 
 It is intended for parser, lexer, tokenizer, and automaton implementations that need fast character
 membership checks, set operations, and deterministic partitioning of the `Char` space.
 
-## Installation
+## 🚀 Installation
 
 ```kotlin
 repositories {
@@ -18,7 +25,7 @@ dependencies {
 }
 ```
 
-## Quick Start
+## 🚀 Usage
 
 ```kotlin
 import one.wabbit.parsing.charset.CharSet

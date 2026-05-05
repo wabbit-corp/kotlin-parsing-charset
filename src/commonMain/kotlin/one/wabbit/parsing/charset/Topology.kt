@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 package one.wabbit.parsing.charset
 
 /** Describes the way two [CharSet] instances overlap. */
@@ -24,14 +26,10 @@ enum class Overlap {
  * @param Set concrete set representation.
  */
 interface SetLike<Set> {
-    /**
-     * Return the empty set value.
-     */
+    /** Return the empty set value. */
     fun empty(): Set
 
-    /**
-     * Return the universal set value.
-     */
+    /** Return the universal set value. */
     fun all(): Set
 
     /**
@@ -158,9 +156,7 @@ interface SetLike1<Element, Set> : SetLike<Set> {
  * @param Top concrete top-level partition representation.
  */
 interface Topology<Element, Set, Top> : SetLike1<Element, Set> {
-    /**
-     * Return the coarsest partition of the whole element space.
-     */
+    /** Return the coarsest partition of the whole element space. */
     fun trivial(): Top
 
     /**
@@ -190,9 +186,7 @@ interface Topology<Element, Set, Top> : SetLike1<Element, Set> {
     fun basis(set: Top): Iterator<Set>
 
     companion object {
-        /**
-         * Character topology backed by [CharSet] and [CharSetTop].
-         */
+        /** Character topology backed by [CharSet] and [CharSetTop]. */
         val charRanges: Topology<Char, CharSet, CharSetTop> =
             object : Topology<Char, CharSet, CharSetTop> {
                 override fun empty(): CharSet = CharSet.none
